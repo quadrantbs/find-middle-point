@@ -13,7 +13,7 @@ function App() {
     useLocationContext();
 
   useEffect(() => {
-    if (locations.length >= 2) {
+    if (locations.length >= 1) {
       const midpoint = calculateMiddlePoint(locations);
       setMiddlePoint(midpoint);
 
