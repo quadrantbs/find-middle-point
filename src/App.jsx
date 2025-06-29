@@ -9,27 +9,37 @@ import LocationList from "./components/LocationList";
 import PlaceRecommendationList from "./components/PlaceRecommendationList";
 
 function App() {
-  const { locations, setMiddlePoint, middlePoint, setPlaces } =
-    useLocationContext();
+  const {
+    locations,
+    setMiddlePoint,
+    middlePoint,
+    setPlaces,
+    setSearchRadius,
+    setIsLoading,
+  } = useLocationContext();
 
   useEffect(() => {
     if (locations.length >= 1) {
+      setPlaces([]);
+      const initialRadius = 400;
+      setSearchRadius(initialRadius);
       const midpoint = calculateMiddlePoint(locations);
       setMiddlePoint(midpoint);
 
-      const searchPlaces = async (radius = 1500) => {
+      const searchPlaces = async (radius) => {
         const query = `
-        [out:json];
-        (
-          node["amenity"~"restaurant|cafe|bench|community_centre"](around:${radius},${midpoint.lat},${midpoint.lng});
-          way["amenity"~"restaurant|cafe|bench|community_centre"](around:${radius},${midpoint.lat},${midpoint.lng});
-          relation["amenity"~"restaurant|cafe|bench|community_centre"](around:${radius},${midpoint.lat},${midpoint.lng});
-          node["leisure"~"park|pitch|playground|garden"](around:${radius},${midpoint.lat},${midpoint.lng});
-          way["leisure"~"park|pitch|playground|garden"](around:${radius},${midpoint.lat},${midpoint.lng});
-          relation["leisure"~"park|pitch|playground|garden"](around:${radius},${midpoint.lat},${midpoint.lng});
-        );
-        out center;
-      `;
+  [out:json];
+  (
+    node["amenity"~"restaurant|cafe|fast_food|shopping_mall|cinema"](around:${radius},${midpoint.lat},${midpoint.lng});
+    way["amenity"~"restaurant|cafe|fast_food|shopping_mall|cinema"](around:${radius},${midpoint.lat},${midpoint.lng});
+    relation["amenity"~"restaurant|cafe|fast_food|shopping_mall|cinema"](around:${radius},${midpoint.lat},${midpoint.lng});
+    node["shop"="mall"](around:${radius},${midpoint.lat},${midpoint.lng});
+    way["shop"="mall"](around:${radius},${midpoint.lat},${midpoint.lng});
+    relation["shop"="mall"](around:${radius},${midpoint.lat},${midpoint.lng});
+  );
+  out center;
+`;
+
         try {
           const res = await fetch(
             `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
@@ -41,7 +51,7 @@ function App() {
             .map((el) => ({
               id: el.id,
               name: el.tags.name || "",
-              type: el.tags.amenity || el.tags.leisure || "unknown",
+              type: el.tags.amenity || "unknown",
               lat: el.lat || el.center?.lat,
               lng: el.lon || el.center?.lon,
             }))
@@ -64,10 +74,11 @@ function App() {
             .sort((a, b) => a.distance - b.distance)
             .slice(0, 10);
 
-          // jika hasilnya terlalu sedikit, ulang radius lebih besar
           if (results.length < 5 && radius < 5000) {
             console.log("Kurang dari 5 hasil, memperluas radius...");
-            return searchPlaces(radius * 2);
+            const newRadius = radius * 2;
+            setSearchRadius(newRadius);
+            return searchPlaces(newRadius);
           }
 
           setPlaces(results);
@@ -76,7 +87,13 @@ function App() {
         }
       };
 
-      searchPlaces(1500);
+      const run = async () => {
+        setIsLoading(true);
+        await searchPlaces(initialRadius);
+        setIsLoading(false);
+      };
+
+      run();
     }
   }, [locations]);
 

@@ -8,6 +8,8 @@ export const LocationProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);
   const [middlePoint, setMiddlePoint] = useState(null);
   const [places, setPlaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(400);
   const mapRef = useRef();
   const popupRefs = useRef({});
 
@@ -36,6 +38,10 @@ export const LocationProvider = ({ children }) => {
         mapRef,
         popupRefs,
         handlePanTo,
+        searchRadius,
+        setSearchRadius,
+        isLoading,
+        setIsLoading,
       }}
     >
       {children}

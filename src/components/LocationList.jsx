@@ -2,8 +2,14 @@ import { useEffect } from "react";
 import { useLocationContext } from "../context/LocationContext";
 
 export default function LocationList() {
-  const { locations, setLocations, setMiddlePoint, setPlaces } =
-    useLocationContext();
+  const {
+    locations,
+    setLocations,
+    setMiddlePoint,
+    setPlaces,
+    setIsLoading,
+    setSearchRadius,
+  } = useLocationContext();
 
   const removeLocation = (index) => {
     const newLocations = [...locations];
@@ -15,9 +21,11 @@ export default function LocationList() {
     if (locations.length < 1) {
       setMiddlePoint(null);
       setPlaces([]);
+      setIsLoading(false);
+      setSearchRadius(400);
       return;
     }
-  });
+  }, [locations]);
 
   return (
     <ul className="mt-2 space-y-1">
